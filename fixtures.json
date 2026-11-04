@@ -1,0 +1,5 @@
+[
+  {"id":"clean","label":"Clear request","kind":"ready","script":"Please quote two copper pipes and three steel brackets.","audio":"/samples/clean.wav","expected_total":"39.25"},
+  {"id":"ambiguous","label":"Ambiguous quantity","kind":"review","script":"Please quote two or three copper pipes and one sealant cartridge.","audio":"/samples/ambiguous.wav","expected_total":null},
+  {"id":"missing","label":"Missing price & unknown item","kind":"review","script":"Please quote one installation service and four mystery valves.","audio":"/samples/missing.wav","expected_total":null}
+]
