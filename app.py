@@ -93,15 +93,15 @@ def transcript(body: TranscriptIn):
 
 @app.post("/api/audio")
 def audio(file: UploadFile = File(...)):
-    model = cached_model()
-    if model is None:
-        raise HTTPException(503, "Cached offline model unavailable. Use transcript input; no model will be downloaded.")
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in {".wav", ".mp3", ".m4a", ".flac", ".ogg"}:
         raise HTTPException(422, "Use WAV, MP3, M4A, FLAC or OGG audio.")
     content = file.file.read(15 * 1024 * 1024 + 1)
     if not content or len(content) > 15 * 1024 * 1024:
         raise HTTPException(422, "Choose a nonempty audio file smaller than 15 MB.")
+    model = cached_model()
+    if model is None:
+        raise HTTPException(503, "Cached offline model unavailable. Use transcript input; no model will be downloaded.")
     if not ASR_LOCK.acquire(blocking=False):
         raise HTTPException(409, "Another local transcription is running. Try again when it finishes.")
     asset = uuid.uuid4().hex + suffix

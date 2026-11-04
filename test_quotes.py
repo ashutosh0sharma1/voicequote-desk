@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 (Path(__file__).parent / "data").mkdir(exist_ok=True)
@@ -91,7 +92,19 @@ class QuotesTest(unittest.TestCase):
         self.assertIn("No fixture price",csv.text)
 
     def test_bad_audio_extension_rejected(self):
-        self.assertEqual(self.client.post('/api/audio',files={"file":("bad.txt",b"hello","text/plain")}).status_code,422)
+        with patch('app.cached_model', return_value=None) as model:
+            self.assertEqual(self.client.post('/api/audio',files={"file":("bad.txt",b"hello","text/plain")}).status_code,422)
+            model.assert_not_called()
+
+    def test_empty_audio_rejected_before_model_lookup(self):
+        with patch('app.cached_model', return_value=None) as model:
+            self.assertEqual(self.client.post('/api/audio',files={"file":("empty.wav",b"","audio/wav")}).status_code,422)
+            model.assert_not_called()
+
+    def test_missing_model_returns_unavailable_without_starting_worker(self):
+        with patch('app.cached_model', return_value=None), patch('app.subprocess.run') as worker:
+            self.assertEqual(self.client.post('/api/audio',files={"file":("sample.wav",b"synthetic","audio/wav")}).status_code,503)
+            worker.assert_not_called()
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
